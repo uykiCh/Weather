@@ -7,8 +7,11 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-
+import com.company.setname.weather.adapter.model_of_items.Model;
+import com.company.setname.weather.adapter.three_hours_adapter.ThreeHoursAdapter;
 import com.company.setname.weather.data.App;
 import com.company.setname.weather.data.dao.WeatherDAO;
 import com.company.setname.weather.data.database.WeatherDatabase;
@@ -21,9 +24,8 @@ import com.company.setname.weather.models.json_structure.response.weather_list.W
 import com.company.setname.weather.models.json_structure.response.weather_list.weather.Weather;
 import com.company.setname.weather.models.json_structure.response.weather_list.weather_list_main.WeatherListMain;
 import com.company.setname.weather.retrofit_settings.RetrofitSettings;
-
+import java.util.ArrayList;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -50,9 +52,30 @@ public class MainActivity extends AppCompatActivity {
 
         weatherService = new RetrofitSettings().getClient().create(RetrofitSettings.WeatherAPI.class);
 
-        /*getWeather();*/
+        getWeather();
 
         setViewPager();
+
+        setThreeHoursRV();
+
+    }
+
+    private void setThreeHoursRV() {
+
+        RecyclerView recyclerView = findViewById(R.id.activity_main_recyclerview_three_hours);
+
+        List<Model> listOfModels = new ArrayList<>();
+        ThreeHoursAdapter threeHoursAdapter = new ThreeHoursAdapter(listOfModels);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false
+        ));
+        recyclerView.setAdapter(threeHoursAdapter);
+
+        for (int i = 0; i < 10; i++) {
+            listOfModels.add(new Model(1, "04d", 12d, 1539359816519L - i * 1000000));
+        }
+
+        threeHoursAdapter.notifyDataSetChanged();
 
     }
 
@@ -145,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class PagerAdapter extends FragmentPagerAdapter {
 
+
         public PagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -154,14 +178,14 @@ public class MainActivity extends AppCompatActivity {
             switch(pos) {
 
                 case 0: return new FragmentRecyclerViewForWeek();
-                case 1: return new FragmentMoreAbout();
+                case 1: return FragmentMoreAbout.newInstance(new WeatherModelForDatabase());
                 default: return new FragmentRecyclerViewForWeek();
             }
         }
 
         @Override
         public int getCount() {
-            return 5;
+            return 2;
         }
     }
 

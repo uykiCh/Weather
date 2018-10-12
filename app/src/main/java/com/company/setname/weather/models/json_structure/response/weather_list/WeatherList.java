@@ -8,6 +8,8 @@ import com.company.setname.weather.models.json_structure.response.weather_list.w
 import com.company.setname.weather.models.json_structure.response.weather_list.wind.Wind;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class WeatherList {

@@ -1,6 +1,8 @@
 package com.company.setname.weather.data.model;
 
-public class WeatherModelForDatabase {
+import java.io.Serializable;
+
+public class WeatherModelForDatabase implements Serializable {
 
     //weather_main
     private Double main_min_temp;

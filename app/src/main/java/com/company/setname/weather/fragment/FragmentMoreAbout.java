@@ -4,12 +4,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.company.setname.weather.R;
+import com.company.setname.weather.data.model.WeatherModelForDatabase;
 import com.company.setname.weather.models.json_structure.response.weather_list.WeatherList;
 
 public class FragmentMoreAbout extends Fragment {
@@ -35,12 +37,23 @@ public class FragmentMoreAbout extends Fragment {
 
         setViews();
 
+        assert getArguments() != null;
+        setData((WeatherModelForDatabase) getArguments().getSerializable("list_more"));
+
         return view;
     }
 
-    private void setData(WeatherList weatherList) {
+    public static FragmentMoreAbout newInstance(WeatherModelForDatabase weatherModelForDatabase) {
 
+        Bundle args = new Bundle();
+        args.putSerializable("list_more", weatherModelForDatabase);
 
+        FragmentMoreAbout fragment = new FragmentMoreAbout();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    private void setData(WeatherModelForDatabase weatherModelForDatabase) {
 
     }
 
