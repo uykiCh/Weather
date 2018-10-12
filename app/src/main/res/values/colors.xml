@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="Black1000">#000000</color>
+    <color name="Black900">#212121</color>
+    <color name="Black800">#424242</color>
+    <color name="Black700">#616161</color>
+    <color name="Black600">#757575</color>
+    <color name="Black500">#9E9E9E</color>
+    <color name="Black400">#BDBDBD</color>
+    <color name="Black300">#E0E0E0</color>
+    <color name="Black200">#EEEEEE</color>
+    <color name="Black100">#F5F5F5</color>
+    <color name="Black50">#FAFAFA</color>
+    <color name="Black0">#FFFFFF</color>
+
+</resources>
