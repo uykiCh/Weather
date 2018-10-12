@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+
 import com.company.setname.weather.adapter.model_of_items.Model;
 import com.company.setname.weather.adapter.three_hours_adapter.ThreeHoursAdapter;
 import com.company.setname.weather.data.App;
@@ -24,8 +25,14 @@ import com.company.setname.weather.models.json_structure.response.weather_list.W
 import com.company.setname.weather.models.json_structure.response.weather_list.weather.Weather;
 import com.company.setname.weather.models.json_structure.response.weather_list.weather_list_main.WeatherListMain;
 import com.company.setname.weather.retrofit_settings.RetrofitSettings;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -54,9 +61,9 @@ public class MainActivity extends AppCompatActivity {
 
         getWeather();
 
-        setViewPager();
+        /*setViewPager();
 
-        setThreeHoursRV();
+        setThreeHoursRV();*/
 
     }
 
@@ -88,6 +95,9 @@ public class MainActivity extends AppCompatActivity {
 
     void getWeather() {
 
+        database = App.getInstance().getDatabase();
+        weatherDAO = database.weatherDAO();
+
         Call<ModelResponse> callToday = weatherService.getForecast(MOSCOW_CITY_CODE, UNITS, API_KEY);
 
         callToday.enqueue(new Callback<ModelResponse>() {
@@ -95,33 +105,59 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ModelResponse> call,
                                    @NonNull Response<ModelResponse> response) {
 
-                ModelResponse data = response.body();
-
                 Log.e(TAG, "onResponse");
                 Log.d(TAG, response.toString());
 
-                assert data != null;
-                List<WeatherList> list = data.getList();
-
                 if (response.isSuccessful()) {
 
-                    Log.i(TAG, String.valueOf(response.body().getCnt()));
+                    List<WeatherList> listOfData = response.body().getList();
+                    List<ModelDatabase> listWMFD = weatherDAO.getAll();
 
-                    database = App.getInstance().getDatabase();
-                    weatherDAO = database.weatherDAO();
+                    Log.i(TAG, "Size(listWMFD): " + listWMFD.size());
+                    Log.i(TAG, "Size(listOfData): " + listOfData.size());
 
-                    Log.i(TAG, "Size: " + weatherDAO.getAll().size());
+                    Set<Long> fromListOfData = new LinkedHashSet<>();
+                    for (int i = 0; i < listOfData.size(); i++) {
+                        fromListOfData.add(listOfData.get(i).getTimestamp() * S_TO_MS);
+                        Log.i(TAG, "Time(fromListOfData): " + listOfData.get(i).getTimestamp() * 1000);
+                    }
 
-                    weatherDAO.insert(new ModelDatabase(parserFromListItemToWeatherModelForDatabase(data.getList().get(2)),
-                            list.get(2).getTimestamp() * S_TO_MS));
+                    Set<Long> fromListWMFD = new LinkedHashSet<>();
+                    for (int i = 0; i < listWMFD.size(); i++) {
+                        fromListWMFD.add(listWMFD.get(i).getTime());
+                        Log.i(TAG, "Time(fromListWMFD): " + listWMFD.get(i).getTime());
+                    }
 
-                    Log.i(TAG, "Size: " + weatherDAO.getAll().size());
+                    fromListOfData.removeAll(fromListWMFD);
 
-                    weatherDAO.deleteUseless(System.currentTimeMillis()/1000);
+                    Log.i(TAG, "Size(fromListWMFD): " + fromListWMFD.size());
+                    Log.i(TAG, "Size(fromListOfData): " + fromListOfData.size());
 
-                    Log.i(TAG, "Size: " + weatherDAO.getAll().size());
+                    List<Long> fromListOfDataList = new ArrayList<>(fromListOfData);
+                    Log.i(TAG, "fromListOfDataList: " + Arrays.toString(fromListOfDataList.toArray()));
 
-                    Log.i(TAG, weatherDAO.getAll().get(weatherDAO.getAll().size() - 1).toString());
+                    for (int i = 0; i < fromListOfDataList.size(); i++) {
+
+                        for (int j = 0; j < listOfData.size(); j++) {
+
+                            if (fromListOfDataList.get(i)/1000 == listOfData.get(j).getTimestamp()) {
+
+                                Log.i(TAG, "" + System.currentTimeMillis());
+                                Log.i(TAG, "" + fromListOfDataList.get(i));
+                                Log.i(TAG, "" + (System.currentTimeMillis()-fromListOfDataList.get(i)));
+
+                                if (System.currentTimeMillis()-fromListOfDataList.get(i)>=10800000){
+
+                                    Log.i(TAG, "onResponse: ");
+
+                                }
+
+                                break;
+
+                            }
+                        }
+                    }
+
 
                 }
 
@@ -175,11 +211,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int pos) {
-            switch(pos) {
+            switch (pos) {
 
-                case 0: return new FragmentRecyclerViewForWeek();
-                case 1: return FragmentMoreAbout.newInstance(new WeatherModelForDatabase());
-                default: return new FragmentRecyclerViewForWeek();
+                case 0:
+                    return new FragmentRecyclerViewForWeek();
+                case 1:
+                    return FragmentMoreAbout.newInstance(new WeatherModelForDatabase());
+                default:
+                    return new FragmentRecyclerViewForWeek();
             }
         }
 

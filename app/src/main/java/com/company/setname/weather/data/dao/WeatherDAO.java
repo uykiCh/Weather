@@ -22,4 +22,7 @@ public interface WeatherDAO {
     @Query("DELETE FROM weather")
     void deleteAll();
 
+    @Query("DELETE FROM weather WHERE id = :id")
+    void deleteById(long id);
+
 }
