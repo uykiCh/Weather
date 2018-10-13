@@ -20,13 +20,14 @@ import com.company.setname.weather.data.dao.WeatherDAO;
 import com.company.setname.weather.data.database.WeatherDatabase;
 import com.company.setname.weather.data.model.ModelDatabase;
 import com.company.setname.weather.data.model.WeatherModelForDatabase;
-import com.company.setname.weather.fragment.FragmentRecyclerViewForWeek;
-import com.company.setname.weather.fragment.FragmentMoreAbout;
+import com.company.setname.weather.fragments.forweek.FragmentRecyclerViewForWeek;
+import com.company.setname.weather.fragments.more_about.FragmentMoreAbout;
 import com.company.setname.weather.models.json_structure.ModelResponse;
 import com.company.setname.weather.models.json_structure.response.weather_list.WeatherList;
 import com.company.setname.weather.models.json_structure.response.weather_list.weather.Weather;
 import com.company.setname.weather.models.json_structure.response.weather_list.weather_list_main.WeatherListMain;
 import com.company.setname.weather.retrofit_settings.RetrofitSettings;
+import com.jaredrummler.materialspinner.MaterialSpinner;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -40,9 +41,12 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements ItemListener {
 
-    private static final String TAG = "MainActivityLog";
     private static final String API_KEY = "fabd53f6a71e2f82c551ff0c5eda930b";
-    private static final Integer MOSCOW_CITY_CODE = 524901;
+    private static final String TAG = "MainActivityLog";
+
+    private static final Integer MOSCOW = 524901;
+    private static final Integer SAINT_PETERSBURG = 498817;
+
     private static final String UNITS = "metric";
     private static final Integer S_TO_MS = 1000;
 
@@ -53,8 +57,19 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
     private ViewPager viewPager;
     private PagerAdapter pagerAdapter;
+    private MaterialSpinner spinner;
 
+    private ArrayList<String> listOfCities;
     private AtomicReference<Long> weatherModelForDatabaseAtomicReferenceNumber;
+    private AtomicReference<List<ModelDatabase>> weatherAtomicReferenceList;
+
+    private RecyclerView recyclerView;
+    private ThreeHoursAdapter threeHoursAdapter;
+
+    private List<Model> listOfThreeHoursModel;
+
+    private List<ModelDatabase> modelDatabaseList;
+    private WeatherModelForDatabase weatherModelForDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,23 +77,95 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         setContentView(R.layout.activity_main);
 
         setSettings();
-
-        weatherModelForDatabaseAtomicReferenceNumber = new AtomicReference<>();
+        setCities();
+        setSpinner(listOfCities);
 
         //update database
         weatherDAO.deleteUseless(System.currentTimeMillis());
         //load forecast
-        getWeather(MOSCOW_CITY_CODE);
-
-        setViewPager();
-        setThreeHoursRV(getThreeHoursFCFromDatabase(MOSCOW_CITY_CODE));
-        setWidgets(MOSCOW_CITY_CODE, weatherDAO.getMinTime());
-
-        Log.i(TAG, "Cur. time: " + System.currentTimeMillis());
+        loadFirstForecast(spinner.getSelectedIndex() == 0 ? MOSCOW : SAINT_PETERSBURG);
 
     }
 
+    private void setCities() {
+        listOfCities = new ArrayList<>();
+        listOfCities.add("Saint.Petersburg");
+        listOfCities.add("Moscow");
+    }
+
+    private void loadFirstForecast(Integer city_code) {
+        getWeather(city_code);
+        setViewPager();
+        setThreeHoursRV(city_code);
+        setWidgets(city_code, weatherDAO.getMinTime(city_code));
+    }
+
+    private void updateForecast(Integer city_code) {
+        getWeather(city_code);
+        updateThreeHoursRV(city_code);
+        updateWidget(city_code, weatherDAO.getMinTime(city_code));
+    }
+
+    private void updateThreeHoursRV(Integer city_code) {
+
+        Log.i(TAG, "updateThreeHoursRV: loaded: " + city_code);
+
+        listOfThreeHoursModel.clear();
+        listOfThreeHoursModel.addAll(getThreeHoursFCFromDatabase(city_code));
+        threeHoursAdapter.notifyDataSetChanged();
+
+    }
+
+    private void updateWidget(Integer city_code, long timestamp) {
+
+        Log.i(TAG, "updateWidget: weatherDAO.getMinTime(city_code): " + weatherDAO.getMinTime(city_code));
+        Log.i(TAG, "updateWidget: city_code: " + city_code);
+
+        weatherAtomicReferenceList.set(weatherDAO.getAll(city_code));
+        notifyViewPagerDataSetChanged();
+
+        weatherModelForDatabase = weatherDAO.getRowByTime(timestamp, city_code).getWeather_model();
+        setCurrentTemp(weatherModelForDatabase.getMain_tem(), weatherModelForDatabase.getWeather_description());
+
+        Log.i(TAG, "updateWidget: temp:" + weatherModelForDatabase.getMain_tem()
+                + " | desc:" + weatherModelForDatabase.getWeather_description());
+
+    }
+
+    private void setWidgets(long city_code, long timestamp) {
+
+        modelDatabaseList = weatherDAO.getAll(city_code);
+        weatherModelForDatabase = weatherDAO.getRowByTime(timestamp, city_code).getWeather_model();
+
+        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), modelDatabaseList, weatherModelForDatabase);
+        viewPager.setAdapter(pagerAdapter);
+
+        setCurrentTemp(weatherModelForDatabase.getMain_tem(), weatherModelForDatabase.getWeather_description());
+
+    }
+
+    private void setSpinner(ArrayList<String> list) {
+        spinner = (MaterialSpinner) findViewById(R.id.activity_main_spinner);
+        spinner.setItems(list);
+        spinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener<String>() {
+
+            @Override
+            public void onItemSelected(MaterialSpinner view, int position, long id, String item) {
+
+                if (position == 0) {
+                    updateForecast(MOSCOW);
+                } else {
+                    updateForecast(SAINT_PETERSBURG);
+                }
+
+            }
+
+        });
+    }
+
     private void setSettings() {
+        weatherModelForDatabaseAtomicReferenceNumber = new AtomicReference<>();
+        weatherAtomicReferenceList = new AtomicReference<>();
         weatherService = new RetrofitSettings().getClient().create(RetrofitSettings.WeatherAPI.class);
         database = App.getInstance().getDatabase();
         weatherDAO = database.weatherDAO();
@@ -98,22 +185,12 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
     }
 
-    private void setWidgets(long city_code, long timestamp) {
+    private void setThreeHoursRV(Integer city_code) {
 
-        List<ModelDatabase> modelDatabaseList = weatherDAO.getAll(city_code);
-        WeatherModelForDatabase weatherModelForDatabase = weatherDAO.getRowByTime(timestamp).getWeather_model();
+        listOfThreeHoursModel = getThreeHoursFCFromDatabase(city_code);
 
-        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), modelDatabaseList, weatherModelForDatabase);
-        viewPager.setAdapter(pagerAdapter);
-
-        setCurrentTemp(weatherModelForDatabase.getMain_tem(), weatherModelForDatabase.getWeather_description());
-
-    }
-
-    private void setThreeHoursRV(List<Model> listOfModels) {
-
-        RecyclerView recyclerView = findViewById(R.id.activity_main_recyclerview_three_hours);
-        ThreeHoursAdapter threeHoursAdapter = new ThreeHoursAdapter( this, listOfModels);
+        recyclerView = findViewById(R.id.activity_main_recyclerview_three_hours);
+        threeHoursAdapter = new ThreeHoursAdapter(this, listOfThreeHoursModel);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false
         ));
@@ -137,9 +214,6 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
             @Override
             public void onResponse(@NonNull Call<ModelResponse> call,
                                    @NonNull Response<ModelResponse> response) {
-
-                Log.e(TAG, "onResponse");
-                Log.d(TAG, response.toString());
 
                 if (response.isSuccessful()) {
 
@@ -177,14 +251,12 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         Set<Long> fromListOfData = new LinkedHashSet<>();
         for (int i = 0; i < listOfData.size(); i++) {
             fromListOfData.add(listOfData.get(i).getTimestamp() * S_TO_MS);
-            Log.i(TAG, "Time(fromListOfData): " + listOfData.get(i).getTimestamp() * 1000);
         }
 
         //get timestamp from list2 to heep for find that is not exist in database
         Set<Long> fromListWMFD = new LinkedHashSet<>();
         for (int i = 0; i < listWMFD.size(); i++) {
             fromListWMFD.add(listWMFD.get(i).getTime());
-            Log.i(TAG, "Time(fromListWMFD): " + listWMFD.get(i).getTime());
         }
 
         //remove non actually information
@@ -261,29 +333,37 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         List<ModelDatabase> modelDatabaseList;
         WeatherModelForDatabase weatherModelForDatabase;
 
-        public PagerAdapter(FragmentManager fm, List<ModelDatabase> modelDatabaseList, WeatherModelForDatabase weatherModelForDatabase) {
+        public PagerAdapter(FragmentManager fm, List<ModelDatabase> modelDatabaseList,
+                            WeatherModelForDatabase weatherModelForDatabase) {
             super(fm);
             this.modelDatabaseList = modelDatabaseList;
             this.weatherModelForDatabase = weatherModelForDatabase;
+
         }
 
         @Override
         public Fragment getItem(int pos) {
-            if (pos == 0){
+            if (pos == 0) {
                 return FragmentRecyclerViewForWeek.newInstance(modelDatabaseList);
-            }
-            else if (pos == 1){
+            } else if (pos == 1) {
                 return FragmentMoreAbout.newInstance(weatherModelForDatabase);
-            }
-            else {
+            } else {
                 return null;
             }
         }
 
         @Override
         public int getItemPosition(Object object) {
-            if (object instanceof FragmentMoreAbout){
-                ((FragmentMoreAbout) object).update(weatherDAO.getRowById(weatherModelForDatabaseAtomicReferenceNumber.get()).getWeather_model());
+            if (weatherModelForDatabaseAtomicReferenceNumber.get() != null) {
+                if (object instanceof FragmentMoreAbout) {
+                    ((FragmentMoreAbout) object).update(weatherDAO.getRowById(weatherModelForDatabaseAtomicReferenceNumber.get())
+                            .getWeather_model());
+                }
+                return super.getItemPosition(object);
+            }
+            if (object instanceof FragmentRecyclerViewForWeek) {
+                ((FragmentRecyclerViewForWeek) object).update(weatherAtomicReferenceList.get());
+                return super.getItemPosition(object);
             }
             return super.getItemPosition(object);
         }
@@ -296,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         @Override
         public void destroyItem(android.view.ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-        };
+        }
 
     }
 
@@ -304,10 +384,11 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         pagerAdapter.notifyDataSetChanged();
     }
 
-    private void setCurrentTemp(double d, String desc){
+    private void setCurrentTemp(double temp, String desc) {
         TextView currentTemp = findViewById(R.id.activity_main_current_temp);
-        currentTemp.setText(String.valueOf((int) d));
+        currentTemp.setText(String.valueOf((int) temp));
         TextView currentDesc = findViewById(R.id.activity_main_current_desc);
         currentDesc.setText(desc);
     }
+
 }

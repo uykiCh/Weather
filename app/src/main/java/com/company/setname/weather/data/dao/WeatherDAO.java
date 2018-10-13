@@ -25,11 +25,11 @@ public interface WeatherDAO {
     @Query("DELETE FROM weather WHERE id = :id")
     void deleteById(long id);
 
-    @Query("SELECT MIN(time) FROM weather")
-    long getMinTime();
+    @Query("SELECT MIN(time) FROM weather WHERE city_code = :city_code")
+    long getMinTime(long city_code);
 
-    @Query("SELECT * FROM weather WHERE time = :time")
-    ModelDatabase getRowByTime(long time);
+    @Query("SELECT * FROM weather WHERE time = :time AND city_code = :city_code")
+    ModelDatabase getRowByTime(long time, long city_code);
 
     @Query("SELECT * FROM weather WHERE city_code = :city_code LIMIT 8")
     List<ModelDatabase> getAllWithLimit8(long city_code);

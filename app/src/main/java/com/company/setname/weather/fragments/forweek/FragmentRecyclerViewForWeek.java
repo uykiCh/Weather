@@ -1,4 +1,4 @@
-package com.company.setname.weather.fragment;
+package com.company.setname.weather.fragments.forweek;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,13 +19,16 @@ import com.company.setname.weather.data.model.ModelDatabase;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-public class FragmentRecyclerViewForWeek extends Fragment {
+public class FragmentRecyclerViewForWeek extends Fragment implements Updatable{
 
     private static final String TAG = "FragmentRVForWeek";
 
     private View view;
+
+    private List<Model> list;
+    private RecyclerView recyclerView;
+    private EveryDayAdapter everyDayAdapter;
 
     @Nullable
     @Override
@@ -43,20 +46,19 @@ public class FragmentRecyclerViewForWeek extends Fragment {
 
     private void setEveryDayRV() {
 
-        List<Model> list = getListFromArg();
+        list = getListFromArg((List<ModelDatabase>) getArguments().getSerializable("list"));
 
-        RecyclerView recyclerView = view.findViewById(R.id.framgent_week_recyclerview);
-        EveryDayAdapter everyDayAdapter = new EveryDayAdapter(list);
+        recyclerView = view.findViewById(R.id.framgent_week_recyclerview);
+        everyDayAdapter = new EveryDayAdapter(list);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext().getApplicationContext()));
         recyclerView.setAdapter(everyDayAdapter);
 
     }
 
-    private List<Model> getListFromArg() {
+    private List<Model> getListFromArg(List<ModelDatabase> modelDatabaseList) {
 
         List<Model> list = new ArrayList<>();
-        List<ModelDatabase> modelDatabaseList = ((List<ModelDatabase>) getArguments().getSerializable("list"));
 
         for (int i = 0; i < 40; i++) {
             ModelDatabase modelDatabaseForCheck = modelDatabaseList.get(i);
@@ -82,5 +84,12 @@ public class FragmentRecyclerViewForWeek extends Fragment {
         FragmentRecyclerViewForWeek fragment = new FragmentRecyclerViewForWeek();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void update(List<ModelDatabase> modelDatabaseList) {
+        list.clear();
+        /*list.addAll(getListFromArg(modelDatabaseList));*/
+        everyDayAdapter.notifyDataSetChanged();
     }
 }
