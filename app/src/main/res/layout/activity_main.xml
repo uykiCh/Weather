@@ -4,12 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/Black600"
+    android:background="@drawable/gradient"
     android:overScrollMode="never">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/activity_main_viewpager"
+            android:layout_width="0dp"
+            android:layout_height="380dp"
+            android:layout_marginTop="8dp"
+            android:overScrollMode="never"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/view2" />
 
         <TextView
             android:id="@+id/activity_main_current_temp"
@@ -19,7 +30,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="@font/roboto_mono_thin"
-            android:text="26"
+            android:text=""
             android:textColor="@color/Black200"
             android:textSize="64sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -44,15 +55,15 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="@font/gudea"
-            android:text="sdf"
+            android:text=""
             android:textAlignment="center"
             android:textColor="@color/Black50"
             android:textSize="28sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:ms_background_color="@color/Black600"
-            app:ms_hide_arrow="true" />
+            app:ms_hide_arrow="true"
+            app:ms_background_color="#176CC7"/>
 
         <TextView
             android:id="@+id/activity_main_current_desc"
@@ -62,7 +73,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="@font/gudea"
-            android:text="Mostly Sunny"
+            android:text=""
             android:textAlignment="center"
             android:textColor="@color/Black100"
             android:textSize="24sp"
@@ -92,17 +103,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/activity_main_recyclerview_three_hours" />
-
-        <android.support.v4.view.ViewPager
-            android:id="@+id/activity_main_viewpager"
-            android:layout_width="0dp"
-            android:layout_height="380dp"
-            android:layout_marginTop="8dp"
-            android:overScrollMode="never"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/view2" />
 
     </android.support.constraint.ConstraintLayout>
 

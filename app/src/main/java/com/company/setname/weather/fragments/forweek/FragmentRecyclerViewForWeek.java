@@ -89,7 +89,7 @@ public class FragmentRecyclerViewForWeek extends Fragment implements Updatable{
     @Override
     public void update(List<ModelDatabase> modelDatabaseList) {
         list.clear();
-        /*list.addAll(getListFromArg(modelDatabaseList));*/
+        list.addAll(getListFromArg(modelDatabaseList));
         everyDayAdapter.notifyDataSetChanged();
     }
 }

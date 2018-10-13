@@ -3,9 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/Black600"
-    >
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/textView5"
@@ -93,10 +91,10 @@
         android:layout_marginTop="16dp"
         android:fontFamily="@font/gudea"
         android:text="@string/wind_speed"
+        android:textColor="@color/Black100"
         android:textSize="15sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView10"
-        android:textColor="@color/Black100" />
+        app:layout_constraintTop_toBottomOf="@+id/textView10" />
 
     <TextView
         android:id="@+id/textView12"

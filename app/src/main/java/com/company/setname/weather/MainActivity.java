@@ -82,9 +82,18 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
         //update database
         weatherDAO.deleteUseless(System.currentTimeMillis());
+
         //load forecast
         loadFirstForecast(spinner.getSelectedIndex() == 0 ? MOSCOW : SAINT_PETERSBURG);
 
+    }
+
+    private void setSettings() {
+        weatherModelForDatabaseAtomicReferenceNumber = new AtomicReference<>();
+        weatherAtomicReferenceList = new AtomicReference<>();
+        weatherService = new RetrofitSettings().getClient().create(RetrofitSettings.WeatherAPI.class);
+        database = App.getInstance().getDatabase();
+        weatherDAO = database.weatherDAO();
     }
 
     private void setCities() {
@@ -93,11 +102,96 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         listOfCities.add("Moscow");
     }
 
+    private void setSpinner(ArrayList<String> list) {
+        spinner = (MaterialSpinner) findViewById(R.id.activity_main_spinner);
+        spinner.setItems(list);
+        spinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener<String>() {
+
+            @Override
+            public void onItemSelected(MaterialSpinner view, int position, long id, String item) {
+
+                if (position == 0) {
+                    updateForecast(MOSCOW);
+                } else {
+                    updateForecast(SAINT_PETERSBURG);
+                }
+
+            }
+
+        });
+    }
+
     private void loadFirstForecast(Integer city_code) {
         getWeather(city_code);
         setViewPager();
         setThreeHoursRV(city_code);
         setWidgets(city_code, weatherDAO.getMinTime(city_code));
+    }
+
+    private void getWeather(final long cityCode) {
+
+        Call<ModelResponse> callToday = weatherService.getForecast(cityCode, UNITS, API_KEY);
+
+        callToday.enqueue(new Callback<ModelResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ModelResponse> call,
+                                   @NonNull Response<ModelResponse> response) {
+
+                if (response.isSuccessful()) {
+
+                    assert response.body() != null;
+                    List<WeatherList> listOfData = response.body().getList();
+                    List<ModelDatabase> listWMFD = weatherDAO.getAll(cityCode);
+
+                    weatherDAO.deleteUseless(System.currentTimeMillis());
+                    selectActual(listOfData, listWMFD, cityCode);
+
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ModelResponse> call, @NonNull Throwable t) {
+
+                Log.e(TAG, "onFailure");
+                Log.e(TAG, t.toString());
+
+            }
+
+        });
+
+    }
+
+    private void setViewPager() {
+
+        viewPager = findViewById(R.id.activity_main_viewpager);
+
+    }
+
+    private void setThreeHoursRV(Integer city_code) {
+
+        listOfThreeHoursModel = getThreeHoursFCFromDatabase(city_code);
+
+        recyclerView = findViewById(R.id.activity_main_recyclerview_three_hours);
+        threeHoursAdapter = new ThreeHoursAdapter(this, listOfThreeHoursModel);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false
+        ));
+        recyclerView.setAdapter(threeHoursAdapter);
+
+        threeHoursAdapter.notifyDataSetChanged();
+
+    }
+
+    private void setWidgets(long city_code, long timestamp) {
+
+        modelDatabaseList = weatherDAO.getAll(city_code);
+        weatherModelForDatabase = weatherDAO.getRowByTime(timestamp, city_code).getWeather_model();
+
+        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), modelDatabaseList, weatherModelForDatabase);
+        viewPager.setAdapter(pagerAdapter);
+
+        setCurrentTemp(weatherModelForDatabase.getMain_tem(), weatherModelForDatabase.getWeather_description());
+
     }
 
     private void updateForecast(Integer city_code) {
@@ -132,45 +226,6 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
     }
 
-    private void setWidgets(long city_code, long timestamp) {
-
-        modelDatabaseList = weatherDAO.getAll(city_code);
-        weatherModelForDatabase = weatherDAO.getRowByTime(timestamp, city_code).getWeather_model();
-
-        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), modelDatabaseList, weatherModelForDatabase);
-        viewPager.setAdapter(pagerAdapter);
-
-        setCurrentTemp(weatherModelForDatabase.getMain_tem(), weatherModelForDatabase.getWeather_description());
-
-    }
-
-    private void setSpinner(ArrayList<String> list) {
-        spinner = (MaterialSpinner) findViewById(R.id.activity_main_spinner);
-        spinner.setItems(list);
-        spinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener<String>() {
-
-            @Override
-            public void onItemSelected(MaterialSpinner view, int position, long id, String item) {
-
-                if (position == 0) {
-                    updateForecast(MOSCOW);
-                } else {
-                    updateForecast(SAINT_PETERSBURG);
-                }
-
-            }
-
-        });
-    }
-
-    private void setSettings() {
-        weatherModelForDatabaseAtomicReferenceNumber = new AtomicReference<>();
-        weatherAtomicReferenceList = new AtomicReference<>();
-        weatherService = new RetrofitSettings().getClient().create(RetrofitSettings.WeatherAPI.class);
-        database = App.getInstance().getDatabase();
-        weatherDAO = database.weatherDAO();
-    }
-
     private List<Model> getThreeHoursFCFromDatabase(long code) {
 
         List<ModelDatabase> modelDatabaseList = weatherDAO.getAllWithLimit8(code);
@@ -182,60 +237,6 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
         }
 
         return modelList;
-
-    }
-
-    private void setThreeHoursRV(Integer city_code) {
-
-        listOfThreeHoursModel = getThreeHoursFCFromDatabase(city_code);
-
-        recyclerView = findViewById(R.id.activity_main_recyclerview_three_hours);
-        threeHoursAdapter = new ThreeHoursAdapter(this, listOfThreeHoursModel);
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.HORIZONTAL, false
-        ));
-        recyclerView.setAdapter(threeHoursAdapter);
-
-        threeHoursAdapter.notifyDataSetChanged();
-
-    }
-
-    private void setViewPager() {
-
-        viewPager = findViewById(R.id.activity_main_viewpager);
-
-    }
-
-    void getWeather(final long cityCode) {
-
-        Call<ModelResponse> callToday = weatherService.getForecast(cityCode, UNITS, API_KEY);
-
-        callToday.enqueue(new Callback<ModelResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<ModelResponse> call,
-                                   @NonNull Response<ModelResponse> response) {
-
-                if (response.isSuccessful()) {
-
-                    assert response.body() != null;
-                    List<WeatherList> listOfData = response.body().getList();
-                    List<ModelDatabase> listWMFD = weatherDAO.getAll(cityCode);
-
-                    weatherDAO.deleteUseless(System.currentTimeMillis());
-                    selectActual(listOfData, listWMFD, cityCode);
-
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ModelResponse> call, @NonNull Throwable t) {
-
-                Log.e(TAG, "onFailure");
-                Log.e(TAG, t.toString());
-
-            }
-
-        });
 
     }
 
@@ -295,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
     }
 
-    WeatherModelForDatabase parserFromListItemToWeatherModelForDatabase(WeatherList weatherList) {
+    private WeatherModelForDatabase parserFromListItemToWeatherModelForDatabase(WeatherList weatherList) {
 
         WeatherModelForDatabase weatherModelForDatabase = new WeatherModelForDatabase();
         WeatherListMain weatherListMain = weatherList.getWeatherListMain();
@@ -320,6 +321,17 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
 
         return weatherModelForDatabase;
 
+    }
+
+    private void notifyViewPagerDataSetChanged() {
+        pagerAdapter.notifyDataSetChanged();
+    }
+
+    private void setCurrentTemp(double temp, String desc) {
+        TextView currentTemp = findViewById(R.id.activity_main_current_temp);
+        currentTemp.setText(String.valueOf((int) temp));
+        TextView currentDesc = findViewById(R.id.activity_main_current_desc);
+        currentDesc.setText(desc);
     }
 
     @Override
@@ -378,17 +390,6 @@ public class MainActivity extends AppCompatActivity implements ItemListener {
             super.destroyItem(container, position, object);
         }
 
-    }
-
-    private void notifyViewPagerDataSetChanged() {
-        pagerAdapter.notifyDataSetChanged();
-    }
-
-    private void setCurrentTemp(double temp, String desc) {
-        TextView currentTemp = findViewById(R.id.activity_main_current_temp);
-        currentTemp.setText(String.valueOf((int) temp));
-        TextView currentDesc = findViewById(R.id.activity_main_current_desc);
-        currentDesc.setText(desc);
     }
 
 }
