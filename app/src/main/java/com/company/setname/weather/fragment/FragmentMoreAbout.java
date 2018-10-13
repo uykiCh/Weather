@@ -1,20 +1,22 @@
 package com.company.setname.weather.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.company.setname.weather.R;
 import com.company.setname.weather.data.model.WeatherModelForDatabase;
-import com.company.setname.weather.models.json_structure.response.weather_list.WeatherList;
 
-public class FragmentMoreAbout extends Fragment {
+public class FragmentMoreAbout extends Fragment implements Updatable {
+
+    private final static String TAG = "FragmentMoreAbout";
 
     private View view;
 
@@ -54,7 +56,15 @@ public class FragmentMoreAbout extends Fragment {
     }
 
     private void setData(WeatherModelForDatabase weatherModelForDatabase) {
-
+        minTemp.setText(String.valueOf(weatherModelForDatabase.getMain_min_temp()));
+        maxTemp.setText(String.valueOf(weatherModelForDatabase.getMain_max_temp()));
+        midTemp.setText(String.valueOf(weatherModelForDatabase.getMain_tem()));
+        pressure.setText(String.valueOf(weatherModelForDatabase.getMain_pressure()));
+        humidity.setText(String.valueOf(weatherModelForDatabase.getMain_humidity()));
+        cloudPercent.setText(String.valueOf(weatherModelForDatabase.getCloud_percent()));
+        windSpeed.setText(String.valueOf(weatherModelForDatabase.getWind_speed()));
+        windDegrees.setText(String.valueOf(weatherModelForDatabase.getWind_deg()));
+        description.setText(String.valueOf(weatherModelForDatabase.getWeather_description()));
     }
 
     private void setViews() {
@@ -70,4 +80,18 @@ public class FragmentMoreAbout extends Fragment {
         description = view.findViewById(R.id.fragment_more_description);
 
     }
+
+    @Override
+    public void update(WeatherModelForDatabase weatherModelForDatabase) {
+        minTemp.setText(String.valueOf(weatherModelForDatabase.getMain_min_temp()));
+        maxTemp.setText(String.valueOf(weatherModelForDatabase.getMain_max_temp()));
+        midTemp.setText(String.valueOf(weatherModelForDatabase.getMain_tem()));
+        pressure.setText(String.valueOf(weatherModelForDatabase.getMain_pressure()));
+        humidity.setText(String.valueOf(weatherModelForDatabase.getMain_humidity()));
+        cloudPercent.setText(String.valueOf(weatherModelForDatabase.getCloud_percent()));
+        windSpeed.setText(String.valueOf(weatherModelForDatabase.getWind_speed()));
+        windDegrees.setText(String.valueOf(weatherModelForDatabase.getWind_deg()));
+        description.setText(String.valueOf(weatherModelForDatabase.getWeather_description()));
+    }
+
 }

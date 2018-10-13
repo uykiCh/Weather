@@ -4,8 +4,10 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
+import java.io.Serializable;
+
 @Entity(tableName = "weather")
-public class ModelDatabase {
+public class ModelDatabase implements Serializable {
 
     public ModelDatabase() {}
 
@@ -18,9 +20,13 @@ public class ModelDatabase {
     @ColumnInfo(name = "time")
     public long time;
 
-    public ModelDatabase(WeatherModelForDatabase weather_model, long time) {
+    @ColumnInfo(name = "city_code")
+    public long code;
+
+    public ModelDatabase(WeatherModelForDatabase weather_model, long time, long code) {
         this.weather_model = weather_model;
         this.time = time;
+        this.code = code;
     }
 
     public long getId() {

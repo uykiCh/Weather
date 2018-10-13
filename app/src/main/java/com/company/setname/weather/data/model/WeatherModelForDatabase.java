@@ -42,6 +42,10 @@ public class WeatherModelForDatabase implements Serializable {
         this.wind_deg = wind_deg;
     }
 
+    public WeatherModelForDatabase(Double main_min_temp) {
+        this.main_min_temp = main_min_temp;
+    }
+
     public WeatherModelForDatabase() {
     }
 

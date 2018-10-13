@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,15 +22,19 @@ import com.company.setname.weather.adapter.model_of_items.Model;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 public class ThreeHoursAdapter extends RecyclerView.Adapter<ThreeHoursAdapter.ViewHolder> {
 
     private static final String TAG = "AdapterNews";
 
+    private ItemListener mItemListener;
+
     private List<Model> news_list;
     public Context context;
 
-    public ThreeHoursAdapter(List<Model> news_list) {
+    public ThreeHoursAdapter(ItemListener mItemListener, List<Model> news_list) {
+        this.mItemListener = mItemListener;
         this.news_list = news_list;
     }
 
@@ -52,6 +57,14 @@ public class ThreeHoursAdapter extends RecyclerView.Adapter<ThreeHoursAdapter.Vi
         holder.setIcon(model.getImageId());
         holder.setTemp(model.getTemperature());
 
+        holder.setClView();
+        holder.clView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mItemListener.onClickItemListener(model.getIdInDatabase());
+            }
+        });
+
     }
 
     @Override
@@ -63,6 +76,8 @@ public class ThreeHoursAdapter extends RecyclerView.Adapter<ThreeHoursAdapter.Vi
 
         private View mView;
 
+        private ConstraintLayout clView;
+
         private TextView time;
         private ImageView icon;
         private TextView temp;
@@ -72,12 +87,17 @@ public class ThreeHoursAdapter extends RecyclerView.Adapter<ThreeHoursAdapter.Vi
             mView = itemView;
         }
 
+        void setClView(){
+            clView = mView.findViewById(R.id.item_three_hours_con_l);
+        }
+
         void setTime(long timeData) {
 
             time = mView.findViewById(R.id.item_three_hours_time);
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(timeData);
+            calendar.setTimeZone(TimeZone.getTimeZone(String.valueOf("Europe/Moscow")));
 
             String timeInString = String.valueOf(calendar.get(Calendar.HOUR)) + String.valueOf(calendar.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM");
 

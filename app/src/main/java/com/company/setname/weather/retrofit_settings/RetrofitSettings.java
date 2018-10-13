@@ -22,7 +22,7 @@ public class RetrofitSettings {
     public interface WeatherAPI {
         @GET("forecast")
         Call<ModelResponse> getForecast(
-                @Query("id") Integer id,
+                @Query("id") long id,
                 @Query("units") String units,
                 @Query("appid") String appid
         );

@@ -10,8 +10,8 @@ import java.util.List;
 @Dao
 public interface WeatherDAO {
 
-    @Query("SELECT * FROM weather")
-    List<ModelDatabase> getAll();
+    @Query("SELECT * FROM weather WHERE city_code = :city_code")
+    List<ModelDatabase> getAll(long city_code);
 
     @Insert
     void insert(ModelDatabase modelDatabase);
@@ -24,5 +24,17 @@ public interface WeatherDAO {
 
     @Query("DELETE FROM weather WHERE id = :id")
     void deleteById(long id);
+
+    @Query("SELECT MIN(time) FROM weather")
+    long getMinTime();
+
+    @Query("SELECT * FROM weather WHERE time = :time")
+    ModelDatabase getRowByTime(long time);
+
+    @Query("SELECT * FROM weather WHERE city_code = :city_code LIMIT 8")
+    List<ModelDatabase> getAllWithLimit8(long city_code);
+
+    @Query("SELECT * FROM weather WHERE id = :id")
+    ModelDatabase getRowById(long id);
 
 }
